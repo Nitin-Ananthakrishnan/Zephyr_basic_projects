@@ -20,3 +20,7 @@ zephyr/
 # OS files
 .DS_Store
 Thumbs.db
+
+plot_results.py
+.png
+simulation_log.txt

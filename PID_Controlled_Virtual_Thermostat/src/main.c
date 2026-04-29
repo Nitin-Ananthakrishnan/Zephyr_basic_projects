@@ -60,7 +60,7 @@ void pid(void *a, void *b, void *c){
     sys.u=u;
     last_error=error;
     
-    LOG_INF("Temp: %.2fc | Target: %.2fc | Heater PID variable: %.2f",sys.T_current,sys.T_target,sys.u);
+    printk("CSV_DATA,%lld,%.2f,%.2f,%.2f\n",k_uptime_get()/100,sys.T_current,sys.T_target,sys.u);
     k_mutex_unlock(&sys_lock);
     k_msleep(100);
     
