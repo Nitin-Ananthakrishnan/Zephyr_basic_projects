@@ -1,0 +1,22 @@
+# Build directory
+build/
+
+# Zephyr output
+zephyr/
+
+# Object and binary files
+*.o
+*.elf
+*.bin
+*.hex
+
+# Logs
+*.log
+
+# Editor files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
