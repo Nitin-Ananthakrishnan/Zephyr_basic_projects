@@ -1,0 +1,99 @@
+Real-Time PID Thermal Controller: A Zephyr RTOS Digital Twin
+
+Project Overview
+
+This project is a high-performance Digital Twin simulation of a thermal control
+system. It implements a multi-threaded PID (Proportional-Integral-Derivative)
+controller on the Zephyr RTOS to regulate a virtual room's temperature.
+
+Instead of simple "mock" data, this system utilizes a first-order differential
+equation to simulate real-world thermodynamics, including heat loss to the
+environment and thermal mass inertia. It demonstrates advanced embedded systems
+concepts including Real-Time Scheduling, Inter-Thread Communication (IPC), and
+Mathematical Modeling.
+
+Technical Highlights
+
+  - Operating System: Zephyr RTOS
+  - Emulation Environment: QEMU (x86/Cortex-M3)
+  - Language: C (C11 standard)
+  - Mathematical Model: Discrete-time Euler integration for thermal dynamics.
+  - Concurrency Primitives: Mutexes for shared state protection, Message Queues
+    (MsgQ) for actuator decoupling.
+  - Interactive CLI: Custom Shell integration for runtime set-point adjustment.
+
+System Architecture
+
+The system is divided into 2 high-priority real-time threads and one
+background interactive thread:
+
+1.  Physics Engine Thread (Priority 1): The "Digital Twin." It calculates the
+    room's temperature every 100ms based on the current heater power and ambient
+    cooling.
+2.  PID Controller Thread (Priority 2): The "Brain." It calculates the error
+    between the target and current temperature, computes the PID formula, and
+    determines the required heater intensity (u).
+4.  Zephyr Shell Task (Background): Provides a CLI for the user to modify the
+    target temperature at runtime.
+
+The "Digital Twin" Physics Model
+
+The room temperature is modeled using the First Law of Thermodynamics,
+discretized for a real-time embedded environment:
+
+T_{next} = T_{curr} + \frac{\Delta t}{C} [ (P_{max} \cdot u) - k(T_{curr} - T_{amb}) ]
+
+  - Thermal Mass (C): Represents the "weight" of the room (e.g., Concrete vs.
+    Tin).
+  - Loss Coefficient (k): Models the insulation quality and heat leakage to the
+    outside.
+  - Ambient Temp (T_{amb}): The baseline temperature the system naturally cools
+    toward.
+  - Control Signal (u): The output of the PID (0.0 to 1.0), scaling the maximum
+    heater power.
+
+PID Implementation
+
+The controller uses a discrete-time transformation of the PID algorithm:
+
+  - Proportional: Corrects based on the current error.
+  - Integral: Eliminates steady-state error by accumulating error over time.
+  - Derivative: Predicts future error to dampen oscillations and prevent
+    overshoot.
+
+The integral and derivative components are calculated using the Euler Method and
+Backward Difference respectively, ensuring compatibility with the RTOS's 100ms
+sampling period (dt).
+
+Concurrency & Safety
+
+  - Data Integrity: A k_mutex protects the shared_resource structure, preventing
+    race conditions between the Physics Engine and the PID Controller.
+  - Thread Decoupling: A k_msgq (Message Queue) is used to pass data to the
+    Actuator thread, ensuring the control loop is not blocked by "hardware"
+    latency.
+  - Deterministic Timing: Every thread utilizes k_msleep to ensure deterministic
+    execution and prevent CPU starvation.
+
+How to Run
+
+Prerequisites
+
+  - Zephyr RTOS Development Environment (West, CMake, Zephyr SDK)
+
+Build & Emulate
+
+1.  Initialize the build:
+    west build -b qemu_x86
+2.  Run the simulation:
+    west build -t run
+
+Interact via Shell
+
+Once the simulation is running, press Enter to access the UART shell.
+
+  - Change the target temperature:
+    uart:~$ set_temp 35.0
+  - View thread status:
+    uart:~$ kernel threads
+
